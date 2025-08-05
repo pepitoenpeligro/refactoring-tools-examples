@@ -1,0 +1,53 @@
+name: 01. ast-grep replace prints
+
+on:
+  workflow_dispatch:
+
+env:
+  AST_GREP_VERSION: 0.39.3
+
+jobs:
+  ast-grep-refactor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ast-grep CLI
+        run: |
+          pip install ast-grep-cli==$AST_GREP_VERSION
+          ast-grep --version
+
+      # ast-grep scan -r ast-grep-rules/replace_print.yml --report-style=rich  .
+      - name: Replace print(...) with logger.info(...) using ast-grep
+        run: |
+          ast-grep run \
+            --lang python \
+            --globs '**/*.py' \
+            -p 'print($MSG)' \
+            --rewrite 'logger.info($MSG)' \
+            -U
+
+      - name: Summarize changes (Git diff)
+        run: |
+          echo "## ast-grep refactor summary" >> $GITHUB_STEP_SUMMARY
+          if git diff --quiet; then
+            echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Archivos modificados" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Estadísticas" >> $GITHUB_STEP_SUMMARY
+          echo "`$(git diff --shortstat)`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Ver diff completo</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          git diff >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY

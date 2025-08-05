@@ -1,0 +1,12 @@
+id: replace-print-with-logger
+message: "Use logger.info instead of print"
+note: "This rule has been defined by DevOps team as a development recommendation"
+severity: hint
+language: python
+files:
+  - "**/*.py"
+rule:
+  pattern: |
+    print($MSG)
+fix: |
+  logger.info($MSG)
