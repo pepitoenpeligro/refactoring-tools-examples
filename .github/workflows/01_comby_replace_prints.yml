@@ -20,7 +20,11 @@ jobs:
 
       - name: Replace print(...) with logger.info(...)
         run: |
-          comby -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -in-place -include '.py'
+          docker run --rm \
+            -v "${{ github.workspace }}":/work -w /work \
+            --user "$(id -u):$(id -g)" \
+            comby/comby:latest \
+            -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -in-place '.py'
 
       - name: Summarize changes (Git diff)
         run: |
