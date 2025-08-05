@@ -21,15 +21,20 @@ jobs:
           pip install ast-grep-cli==$AST_GREP_VERSION
           ast-grep --version
 
-      # ast-grep scan -r ast-grep-rules/replace_print.yml --report-style=rich  .
-      - name: Replace print(...) with logger.info(...) using ast-grep
+      - name: Replace print(...) with logger with YAML rules mode
+        run: |
+          ast-grep scan \
+          -r ast-grep-rules/replace_print.yml \
+          --report-style=rich  .
+
+      - name: Replace print(...) with logger.info(...) using ast-grep in CLI mode and rewrite enable
         run: |
           ast-grep run \
             --lang python \
             --globs '**/*.py' \
             -p 'print($MSG)' \
-            --rewrite 'logger.info($MSG)' \
-            -U
+            -U \
+            --rewrite 'logger.info($MSG)'
 
       - name: Summarize changes (Git diff)
         run: |
@@ -38,14 +43,19 @@ jobs:
             echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Archivos modificados" >> $GITHUB_STEP_SUMMARY
-          git diff --name-only | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          echo "### Modifications" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Estadísticas" >> $GITHUB_STEP_SUMMARY
+          git status --porcelain | awk '{print $2}' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "`$(git diff --shortstat)`" >> $GITHUB_STEP_SUMMARY
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "<details><summary>Ver diff completo</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Show diff</summary>" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo '```diff' >> $GITHUB_STEP_SUMMARY
           git diff >> $GITHUB_STEP_SUMMARY
