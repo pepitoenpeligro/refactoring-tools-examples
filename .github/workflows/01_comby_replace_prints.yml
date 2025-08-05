@@ -3,6 +3,9 @@ name: 01. Comby replace prints
 on:
   workflow_dispatch:
 
+env:
+  COMBY_VERSION: 1.8.1
+
 jobs:
   comby-refactor:
     runs-on: ubuntu-latest
@@ -13,12 +16,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Replace print(...) with logger.info(...)
+      - name: Replace print(...) with logger.info(...) visible in runner
+        run: |
+          yes | docker run --rm -i \
+            -v "${{ github.workspace }}":/work -w /work \
+            --user "$(id -u):$(id -g)" \
+            comby/comby:$COMBY_VERSION \
+            -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -r '.py'
+
+      - name: Replace print(...) with logger.info(...) and persist files
         run: |
           docker run --rm \
             -v "${{ github.workspace }}":/work -w /work \
             --user "$(id -u):$(id -g)" \
-            comby/comby:latest \
+            comby/comby:$COMBY_VERSION \
             -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -in-place '.py'
 
       - name: Summarize changes (Git diff)
