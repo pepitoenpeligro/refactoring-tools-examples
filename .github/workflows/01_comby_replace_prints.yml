@@ -15,7 +15,7 @@ jobs:
 
       - name: Install comby
         run: |
-          curl -sL https://get.comby.dev | bash -s -- -b /usr/local/bin
+          bash <(curl -sL get-comby.netlify.app)
           comby -version
 
       - name: Replace print(...) with logger.info(...)
