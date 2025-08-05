@@ -13,11 +13,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install comby
-        run: |
-          bash <(curl -sL get-comby.netlify.app)
-          comby -version
-
       - name: Replace print(...) with logger.info(...)
         run: |
           docker run --rm \
