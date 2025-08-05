@@ -1,0 +1,12 @@
+# Lambda function dependencies for root endpoint
+# Keep this minimal - only include what's absolutely necessary
+
+# No external dependencies needed for this function
+# Uses only Python standard library modules:
+# - json (built-in)
+# - datetime (built-in)
+# - typing (built-in)
+
+# Example dependencies (commented out - add as needed):
+# requests==2.32.4
+# boto3==1.40.2
