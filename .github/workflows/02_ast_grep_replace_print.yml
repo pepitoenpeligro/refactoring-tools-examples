@@ -1,13 +1,13 @@
-name: 01. Comby replace prints
+name: 01. ast-grep replace prints
 
 on:
   workflow_dispatch:
 
 env:
-  COMBY_VERSION: latest
+  AST_GREP_VERSION: 0.39.3
 
 jobs:
-  comby-refactor:
+  ast-grep-refactor:
     runs-on: ubuntu-latest
 
     steps:
@@ -16,28 +16,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Replace print(...) with logger.info(...) visible in runner
+      - name: Install ast-grep CLI
         run: |
-          yes | docker run --rm -i \
-            -v "${{ github.workspace }}":/work -w /work \
-            --user "$(id -u):$(id -g)" \
-            comby/comby:$COMBY_VERSION \
-            -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -r '.py'
+          pip install ast-grep-cli==$AST_GREP_VERSION
+          ast-grep --version
 
-      - name: Replace print(...) with logger.info(...) and persist files
+      - name: Replace print(...) with logger with YAML rules mode
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}":/work -w /work \
-            --user "$(id -u):$(id -g)" \
-            comby/comby:$COMBY_VERSION \
-            -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -in-place '.py'
+          ast-grep scan \
+          -r ast-grep-rules/replace_print.yml \
+          --report-style=rich  .
+
+      - name: Replace print(...) with logger.info(...) using ast-grep in CLI mode and rewrite enable
+        run: |
+          ast-grep run \
+            --lang python \
+            --globs '**/*.py' \
+            -p 'print($MSG)' \
+            -U \
+            --rewrite 'logger.info($MSG)'
 
       - name: Summarize changes (Git diff)
         run: |
-          echo "## 01. Comby refactor summary" >> $GITHUB_STEP_SUMMARY
-
-          changed=$(git status --porcelain | wc -l)
-          if [ "$changed" -eq 0 ]; then
+          echo "## ast-grep refactor summary" >> $GITHUB_STEP_SUMMARY
+          if git diff --quiet; then
             echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
             exit 0
           fi
