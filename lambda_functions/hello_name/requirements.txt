@@ -1,0 +1,14 @@
+# Lambda function dependencies for hello_name endpoint
+# Keep this minimal - only include what's absolutely necessary
+
+# No external dependencies needed for this function
+# Uses only Python standard library modules:
+# - json (built-in)
+# - hashlib (built-in)
+# - time (built-in)
+# - typing (built-in)
+
+# Example dependencies (commented out - add as needed):
+# requests==2.32.4
+# boto3==1.40.2
+# pydantic==2.11.7
