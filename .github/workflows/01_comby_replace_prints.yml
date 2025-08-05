@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  COMBY_VERSION: 1.8.1
+  COMBY_VERSION: latest
 
 jobs:
   comby-refactor:
