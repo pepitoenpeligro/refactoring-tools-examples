@@ -1,4 +1,4 @@
-name: 01. ast-grep replace prints
+name: 02. ast-grep replace prints
 
 on:
   workflow_dispatch:
