@@ -1,0 +1,51 @@
+name: 01. Comby replace prints
+
+on:
+  workflow_dispatch:
+
+jobs:
+  comby-refactor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install comby
+        run: |
+          curl -sL https://get.comby.dev | bash -s -- -b /usr/local/bin
+          comby -version
+
+      - name: Replace print(...) with logger.info(...)
+        run: |
+          comby -matcher .py 'print(:[msg])' 'logger.info(:[msg])' -in-place -include '.py'
+
+      - name: Summarize changes (Git diff)
+        run: |
+          echo "## 01. Comby refactor summary" >> $GITHUB_STEP_SUMMARY
+
+          changed=$(git status --porcelain | wc -l)
+          if [ "$changed" -eq 0 ]; then
+            echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Modifications" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          git status --porcelain | awk '{print $2}' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "`$(git diff --shortstat)`" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Show diff</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          git diff >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
