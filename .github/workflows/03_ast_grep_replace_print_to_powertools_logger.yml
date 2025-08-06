@@ -25,7 +25,7 @@ jobs:
         run: |
           ast-grep scan \
           -r ast-grep-rules/replace_print_to_powertools_logger.yml \
-          --report-style=rich  .
+          --report-style=rich  . --update-all
 
       - name: Summarize changes (Git diff)
         run: |
