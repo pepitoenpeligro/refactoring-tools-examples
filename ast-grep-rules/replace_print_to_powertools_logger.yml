@@ -33,7 +33,7 @@ fix: |
   $I
   from aws_lambda_powertools import Logger
   logger = Logger()
-message: "Añade 'from aws_lambda_powertools import Logger' al final del bloque de imports."
+message: "Add 'from aws_lambda_powertools import Logger' at the end of the import block."
 # --- Notes ------------------------------------------------------------
 # Matches the last `from ... import ...` in the initial import block and
 # appends the Powertools import + `logger = Logger()`.
@@ -49,7 +49,7 @@ rule:
   kind: call
   pattern: print($$$ARGS)
 fix: logger.info($$$ARGS)
-message: "Usa logger.info(...) en lugar de print(...)."
+message: "Use logger.info(...) instead of print(...)."
 # --- Notes ------------------------------------------------------------
 # Replaces any `print(...)` call with `logger.info(...)`, preserving args.
 # If you want to skip keyword-arg prints (sep=, end=, etc.), add:
@@ -93,4 +93,4 @@ rule:
 fix: |
   $DOC
   logger.info('Event received:', extra=event)
-message: "Inserta logger.info(event) tras el docstring en lambda_handler(event, context)."
+message: "Insert logger.info(event) after the docstring in lambda_handler(event, context)."
