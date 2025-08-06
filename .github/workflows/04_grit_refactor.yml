@@ -1,16 +1,16 @@
-name: 03. ast-grep replace prints to powertools logger
+name: 04. grit refactor
 
 on:
   workflow_dispatch:
 
 env:
-  AST_GREP_VERSION: "0.39.3"
+  GRIT_VERSION: "0.1.0-alpha.1743007075"
   TERM: xterm-256color
   CLICOLOR: "1"
   FORCE_COLOR: "1"
 
 jobs:
-  ast-grep-refactor:
+  grit-refactor:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,26 +19,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install ast-grep CLI
+      - name: Install grit CLI
         run: |
-          pip install ast-grep-cli==$AST_GREP_VERSION
-          ast-grep --version
+          npm install --location=global @getgrit/cli@$GRIT_VERSION
+          grit --version
 
-      - name: Replace print(...) with logger with YAML rules mode
+      - name: List available rules
         run: |
-          ast-grep scan \
-          -r ast-grep-rules/replace_print_to_powertools_logger.yml \
-          --report-style=rich . --color=always
+          grit list
 
-      - name: Replace print(...) with logger with YAML rules mode with persistence
+      - name: Run rules in dry-run mode
         run: |
-          ast-grep scan \
-          -r ast-grep-rules/replace_print_to_powertools_logger.yml \
-          --report-style=rich . --update-all
+          grit apply append_powertools_import_after_last_import . --dry-run
+          grit apply lambda_handler_insert_event . --dry-run
+          grit apply replace_print_with_logger_info . --dry-run
+
+      - name: Run rules in persistence mode
+        run: |
+          grit apply append_powertools_import_after_last_import .
+          grit apply lambda_handler_insert_event .
+          grit apply replace_print_with_logger_info .
 
       - name: Summarize changes (Git diff)
         run: |
-          echo "## ast-grep refactor summary" >> $GITHUB_STEP_SUMMARY
+          echo "## grit refactor summary" >> $GITHUB_STEP_SUMMARY
           if git diff --quiet; then
             echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
             exit 0
