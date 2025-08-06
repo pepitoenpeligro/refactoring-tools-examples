@@ -57,3 +57,40 @@ message: "Usa logger.info(...) en lugar de print(...)."
 #     has:
 #       kind: keyword_argument
 # ---------------------------------------------------------------------
+
+---
+id: lambda_handler_insert_event_log_after_docstring
+language: python
+rule:
+  all:
+    # Target: el propio docstring (expresión string) dentro del cuerpo
+    - kind: expression_statement
+    - pattern: $DOC
+    - has: { kind: string }
+    # Debe venir inmediatamente antes de otra sentencia (usamos follows en la siguiente regla,
+    # pero aquí reescribimos el docstring para "añadir" la línea debajo)
+    - inside:
+        all:
+          # Trabajamos dentro del bloque (cuerpo) de la función
+          - kind: block
+          # Ese bloque pertenece a un lambda_handler tipado (con o sin return)
+          - inside:
+              all:
+                - kind: function_definition
+                - any:
+                    - pattern: |
+                        def lambda_handler(event: $T1, context: $T2) -> $RET:
+                            $$$BODY
+                    - pattern: |
+                        def lambda_handler(event: $T1, context: $T2):
+                            $$$BODY
+          # Evita añadir si ya hay un log/print del event como sentencia directa del bloque
+          - not:
+              has:
+                any:
+                  - pattern: logger.$METHOD(event, $$$REST)
+                  - pattern: print(event, $$$REST)
+fix: |
+  $DOC
+  logger.info('Event received:', extra=event)
+message: "Inserta logger.info(event) tras el docstring en lambda_handler(event, context)."
