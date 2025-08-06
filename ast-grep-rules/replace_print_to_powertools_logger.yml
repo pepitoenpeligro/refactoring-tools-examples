@@ -1,0 +1,59 @@
+id: append_logger_import_after_last_import_from
+language: python
+rule:
+  all:
+    - kind: import_from_statement
+    - pattern: $I
+    - inside: { kind: module }
+    - not:
+        precedes:
+          any:
+            - kind: import_statement
+            - kind: import_from_statement
+          stopBy: neighbor
+    - not:
+        follows:
+          any:
+            - kind: function_definition
+            - kind: class_definition
+            - kind: decorated_definition
+            - kind: assignment
+            - kind: if_statement
+            - kind: try_statement
+            - kind: for_statement
+            - kind: while_statement
+          stopBy: end
+    - not:
+        inside:
+          kind: module
+          has:
+            pattern: from aws_lambda_powertools import Logger
+            stopBy: end
+fix: |
+  $I
+  from aws_lambda_powertools import Logger
+  logger = Logger()
+message: "Añade 'from aws_lambda_powertools import Logger' al final del bloque de imports."
+# --- Notes ------------------------------------------------------------
+# Matches the last `from ... import ...` in the initial import block and
+# appends the Powertools import + `logger = Logger()`.
+# We avoid duplicating the import with the final `not: inside ... has ...`.
+# IMPORTANT: keep comments OUTSIDE the `fix: |` block, or they will be
+# inserted into your Python file.
+# ---------------------------------------------------------------------
+
+---
+id: replace_print_with_logger_info
+language: python
+rule:
+  kind: call
+  pattern: print($$$ARGS)
+fix: logger.info($$$ARGS)
+message: "Usa logger.info(...) en lugar de print(...)."
+# --- Notes ------------------------------------------------------------
+# Replaces any `print(...)` call with `logger.info(...)`, preserving args.
+# If you want to skip keyword-arg prints (sep=, end=, etc.), add:
+#   not:
+#     has:
+#       kind: keyword_argument
+# ---------------------------------------------------------------------
