@@ -19,14 +19,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git (local commits for diffs)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f grit_before
+
       - name: Install grit CLI
         run: |
           npm install --location=global @getgrit/cli@$GRIT_VERSION
           grit --version
 
       - name: List available rules
-        run: |
-          grit list
+        run: grit list
 
       - name: Run rules in dry-run mode
         run: |
@@ -34,34 +39,92 @@ jobs:
           grit apply replace_print_with_logger_info . --dry-run
           grit apply lambda_handler_insert_event . --dry-run
 
-      - name: Run rules in persistence mode
+      - name: Apply rule 1 and commit if changed
+        env:
+          RULE_ID: append_powertools_import_after_last_import
         run: |
-          yes | grit apply append_powertools_import_after_last_import .
-          yes | grit apply replace_print_with_logger_info .
-          yes |grit apply lambda_handler_insert_event .
-
-      - name: Summarize changes (Git diff)
-        run: |
-          echo "## grit refactor summary" >> $GITHUB_STEP_SUMMARY
-          if git diff --quiet; then
-            echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
-            exit 0
+          grit apply "$RULE_ID" . --force
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "[grit] $RULE_ID"
+            echo "RULE1_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
           fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Modifications" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          git status --porcelain | awk '{print $2}' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+      - name: Apply rule 2 and commit if changed
+        env:
+          RULE_ID: replace_print_with_logger_info
+        run: |
+          grit apply "$RULE_ID" . --force
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "[grit] $RULE_ID"
+            echo "RULE2_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Statistics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "`$(git diff --shortstat)`" >> $GITHUB_STEP_SUMMARY
+      - name: Apply rule 3 and commit if changed
+        env:
+          RULE_ID: lambda_handler_insert_event
+        run: |
+          grit apply "$RULE_ID" . --force
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "[grit] $RULE_ID"
+            echo "RULE3_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          fi
 
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "<details><summary>Show diff</summary>" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```diff' >> $GITHUB_STEP_SUMMARY
-          git diff >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "</details>" >> $GITHUB_STEP_SUMMARY
+      - name: Summarize changes (baseline vs total and per rule)
+        shell: bash
+        run: |
+          {
+            echo "## grit refactor summary"
+            echo
+
+            # Si no hay cambios respecto al baseline:
+            if git diff --quiet grit_before..HEAD; then
+              echo "No se detectaron cambios."
+              exit 0
+            fi
+
+            echo "### Archivos modificados (global)"
+            echo
+            git diff --name-status grit_before..HEAD | sed 's/^/- /'
+            echo
+
+            echo "### Estadísticas (global)"
+            echo
+            echo "\`$(git diff --shortstat grit_before..HEAD)\`"
+            echo
+
+            # Diff por regla (si existió commit para la regla)
+            prev_ref="grit_before"
+            for i in 1 2 3; do
+              sha_var="RULE${i}_SHA"
+              sha_val=${!sha_var:-}
+              [ -z "$sha_val" ] && continue
+
+              title=$(git log -1 --pretty=%s "$sha_val")
+              echo "### ${title}"
+              echo
+              echo "\`$(git diff --shortstat ${prev_ref}..${sha_val})\`"
+              echo
+              echo "<details><summary>Mostrar diff</summary>"
+              echo
+              echo '```diff'
+              git --no-pager diff ${prev_ref}..${sha_val}
+              echo '```'
+              echo "</details>"
+              echo
+
+              prev_ref="$sha_val"
+            done
+
+            # Diff global expandible
+            echo "### Diff global (grit_before..HEAD)"
+            echo
+            echo "<details><summary>Mostrar diff completo</summary>"
+            echo
+            echo '```diff'
+            git --no-pager diff grit_before..HEAD
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
