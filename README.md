@@ -1,5 +1,8 @@
 # Refactoring Tools Example
 
+[![02. ast-grep replace prints](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/02_ast_grep_replace_print.yml/badge.svg)](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/02_ast_grep_replace_print.yml) [![03. ast-grep replace prints to powertools logger](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/03_ast_grep_replace_print_to_powertools_logger.yml/badge.svg)](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/03_ast_grep_replace_print_to_powertools_logger.yml) [![04. grit refactor](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/04_grit_refactor.yml/badge.svg)](https://github.com/pepitoenpeligro/refactoring-tools-examples/actions/workflows/04_grit_refactor.yml)
+
+
 This repo holds a complete AWS CDK project howcasing five separate Python Lambda functions, each handling different API endpoints with unique functionality. Includes greeting services and mortgage calculation services following Clean Code and Hexagonal Architecture principles.
 
 ## 🏗️ Architecture
