@@ -4,7 +4,10 @@ on:
   workflow_dispatch:
 
 env:
-  AST_GREP_VERSION: 0.39.3
+  AST_GREP_VERSION: "0.39.3"
+  TERM: xterm-256color
+  CLICOLOR: "1"
+  FORCE_COLOR: "1"
 
 jobs:
   ast-grep-refactor:
@@ -25,7 +28,13 @@ jobs:
         run: |
           ast-grep scan \
           -r ast-grep-rules/replace_print_to_powertools_logger.yml \
-          --report-style=rich  . --update-all
+          --report-style=rich . --color=always
+
+      - name: Replace print(...) with logger with YAML rules mode with persistence
+        run: |
+          ast-grep scan \
+          -r ast-grep-rules/replace_print_to_powertools_logger.yml \
+          --report-style=rich . --update-all
 
       - name: Summarize changes (Git diff)
         run: |
