@@ -31,14 +31,14 @@ jobs:
       - name: Run rules in dry-run mode
         run: |
           grit apply append_powertools_import_after_last_import . --dry-run
-          grit apply lambda_handler_insert_event . --dry-run
           grit apply replace_print_with_logger_info . --dry-run
+          grit apply lambda_handler_insert_event . --dry-run
 
       - name: Run rules in persistence mode
         run: |
-          grit apply append_powertools_import_after_last_import .
-          grit apply lambda_handler_insert_event .
-          grit apply replace_print_with_logger_info .
+          grit apply append_powertools_import_after_last_import . --force
+          grit apply replace_print_with_logger_info . --force
+          grit apply lambda_handler_insert_event . --force
 
       - name: Summarize changes (Git diff)
         run: |
