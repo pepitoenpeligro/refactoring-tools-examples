@@ -2,19 +2,19 @@
 
 ```grit
 language python
-// Encaja cabeceras típicas de lambda_handler con o sin tipos y con o sin return
+// Matches typical lambda_handler headers with or without types and with or without return
 `$header
     $doc
     $rest` where {
-  // $header: una de estas formas de la firma de lambda_handler
+  // $header: one of these forms of the lambda_handler signature
   $header <: or {
     `def lambda_handler(event, context):`,
     `def lambda_handler(event: $t1, context: $t2):`,
     `def lambda_handler(event: $t1, context: $t2) -> $ret:`
   },
-  // El primer statement del bloque es el docstring
+  // The first statement of the block is the docstring
   $doc <: string(),
-  // Evita añadir si ya hay un log/print directo del event
+  // Avoid adding if there is already a direct log/print of the event
   $rest <: not contains or {
     `logger.$method(event, $...)`,
     `print(event, $...)`
