@@ -15,7 +15,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         API Gateway response with random greeting
     """
     try:
-        print("Hello endpoint called - generating random greeting")
+        print("Hello endpoint called generating random greeting")
 
         # List of random greetings
         greetings = [
