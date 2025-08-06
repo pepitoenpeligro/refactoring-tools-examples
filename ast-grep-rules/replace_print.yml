@@ -8,5 +8,4 @@ files:
 rule:
   pattern: |
     print($MSG)
-fix: |
-  logger.info($MSG)
+fix: logger.info($MSG)
