@@ -103,7 +103,7 @@ jobs:
               [ -z "$sha_val" ] && continue
 
               title=$(git log -1 --pretty=%s "$sha_val")
-              echo "### ${title}"
+              echo "## ${title}"
               echo
               echo "\`$(git diff --shortstat ${prev_ref}..${sha_val})\`"
               echo
