@@ -1,0 +1,67 @@
+name: 04. grit refactor
+
+on:
+  workflow_dispatch:
+
+env:
+  GRIT_VERSION: "0.1.0-alpha.1743007075"
+  TERM: xterm-256color
+  CLICOLOR: "1"
+  FORCE_COLOR: "1"
+
+jobs:
+  grit-refactor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install grit CLI
+        run: |
+          npm install --location=global @getgrit/cli@$GRIT_VERSION
+          grit --version
+
+      - name: List available rules
+        run: |
+          grit list
+
+      - name: Run rules in dry-run mode
+        run: |
+          grit apply append_powertools_import_after_last_import . --dry-run
+          grit apply lambda_handler_insert_event . --dry-run
+          grit apply replace_print_with_logger_info . --dry-run
+
+      - name: Run rules in persistence mode
+        run: |
+          grit apply append_powertools_import_after_last_import .
+          grit apply lambda_handler_insert_event .
+          grit apply replace_print_with_logger_info .
+
+      - name: Summarize changes (Git diff)
+        run: |
+          echo "## grit refactor summary" >> $GITHUB_STEP_SUMMARY
+          if git diff --quiet; then
+            echo "No se detectaron cambios." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Modifications" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          git status --porcelain | awk '{print $2}' | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "`$(git diff --shortstat)`" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>Show diff</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```diff' >> $GITHUB_STEP_SUMMARY
+          git diff >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY

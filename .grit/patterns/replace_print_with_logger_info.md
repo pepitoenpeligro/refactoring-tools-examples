@@ -1,0 +1,5 @@
+
+```grit
+language python
+`print($args)` => `logger.info($args)`
+```
