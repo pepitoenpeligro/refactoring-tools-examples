@@ -63,17 +63,17 @@ id: lambda_handler_insert_event_log_after_docstring
 language: python
 rule:
   all:
-    # Target: el propio docstring (expresión string) dentro del cuerpo
+    # Target: the docstring itself (string expression) inside the body
     - kind: expression_statement
     - pattern: $DOC
     - has: { kind: string }
-    # Debe venir inmediatamente antes de otra sentencia (usamos follows en la siguiente regla,
-    # pero aquí reescribimos el docstring para "añadir" la línea debajo)
+    # It must come immediately before another statement (we use follows in the next rule,
+    # but here we rewrite the docstring to "add" the line below)
     - inside:
         all:
-          # Trabajamos dentro del bloque (cuerpo) de la función
+          # We work inside the block (body) of the function
           - kind: block
-          # Ese bloque pertenece a un lambda_handler tipado (con o sin return)
+          # That block belongs to a typed lambda_handler (with or without return)
           - inside:
               all:
                 - kind: function_definition
@@ -84,7 +84,7 @@ rule:
                     - pattern: |
                         def lambda_handler(event: $T1, context: $T2):
                             $$$BODY
-          # Evita añadir si ya hay un log/print del event como sentencia directa del bloque
+          # Avoid adding if there is already a log/print of the event as a direct statement in the block
           - not:
               has:
                 any:
